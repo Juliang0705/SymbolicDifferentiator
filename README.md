@@ -1,2 +1,2 @@
 # SymbolicDifferentiator
-Calculate the derivative of an expression
+Compute the derivative of math expression in python
