@@ -41,6 +41,15 @@ class Expression (object):
     @abstractmethod
     def __str__(self):
         pass
+    
+    #param: other = an Expression
+    @abstractmethod
+    def __eq__(self,other):
+        pass
+    
+    def __ne__(self,other):
+        return not self.__eq__(other)
+    
         
 class Constant(Expression):
     
@@ -57,6 +66,10 @@ class Constant(Expression):
     
     def __str__(self):
         return str(self.value)
+    
+    def __eq__(self, other):
+        return isinstance(other,Constant) and self.value == other.value
+        
         
 class Variable(Expression):
     
@@ -74,6 +87,9 @@ class Variable(Expression):
     
     def __str__(self):
         return self.value
+    
+    def __eq__(self, other):
+        return isinstance(other,Variable) and self.value == other.value
         
 class Plus(Expression):
     
@@ -92,6 +108,9 @@ class Plus(Expression):
     
     def __str__(self):
         return "(" + self.left.__str__() + "+" + self.right.__str__() + ")"
+    
+    def __eq__(self, other):
+        return isinstance(other,Plus) and self.left == other.left and self.right == other.right   
 
 class Minus(Expression):
     
@@ -110,6 +129,9 @@ class Minus(Expression):
     
     def __str__(self):
         return "(" + self.left.__str__() + "-" + self.right.__str__() + ")"
+    
+    def __eq__(self, other):
+        return isinstance(other,Minus) and self.left == other.left and self.right == other.right      
     
 class Multiply(Expression):
     
@@ -130,6 +152,9 @@ class Multiply(Expression):
     
     def __str__(self):
         return "(" + self.left.__str__() + "*" + self.right.__str__() + ")"
+    
+    def __eq__(self, other):
+        return isinstance(other,Multiply) and self.left == other.left and self.right == other.right      
 
 class Divide(Expression):
     
@@ -153,6 +178,9 @@ class Divide(Expression):
     def __str__(self):
         return "(" + self.left.__str__() + "/" + self.right.__str__() + ")"
     
+    def __eq__(self, other):
+        return isinstance(other,Divide) and self.left == other.left and self.right == other.right      
+    
 class E(Expression):
     
     #param: exponent = an Expression
@@ -161,13 +189,16 @@ class E(Expression):
         self.exponent = exponent
     
     def derivative(self):
-        return Multiply(self,self.exponent.derivative())
+        return Multiply(self.exponent.derivative(),self)
     
     def compute(self, x):
         return math.pow(math.e,self.exponent.compute(x))
     
     def __str__(self):
         return "(e^" + self.exponent.__str__() + ")"
+    
+    def __eq__(self, other):
+        return isinstance(other,E) and self.exponent == other.exponent
     
 class Ln(Expression):
     
@@ -185,6 +216,9 @@ class Ln(Expression):
     def __str__(self):
         return "(ln " + self.argument.__str__() + ")"
     
+    def __eq__(self, other):
+        return isinstance(other,Ln) and self.argument == other.argument    
+    
 class Power(Expression):
     
     #param: base = an Expression, Exponent = an Expression
@@ -196,8 +230,8 @@ class Power(Expression):
         
     def derivative(self):
         #Power rule
-        if isinstance(self.base,Variable) & isinstance(self.exponent,Constant):
-            return Multiply(self.exponent, Power(self.base, Constant(self.exponent.compute(0)-1)))
+        if isinstance(self.base,Variable) and isinstance(self.exponent,Constant):
+            return Multiply(self.exponent, Power(self.base, Constant(self.exponent.value-1)))
         #this method covers everything else
         return E(Multiply(self.exponent, Ln(self.base))).derivative()
     
@@ -206,6 +240,9 @@ class Power(Expression):
     
     def __str__(self):
         return "(" + self.base.__str__() + "^" + self.exponent.__str__() + ")"
+    
+    def __eq__(self, other):
+        return isinstance(other,Power) and self.base == other.base and self.exponent == other.exponent    
 
 class Sin(Expression):
     
@@ -223,6 +260,9 @@ class Sin(Expression):
     def __str__(self):
         return "(sin " + self.expression.__str__() + ")"
     
+    def __eq__(self, other):
+        return isinstance(other,Sin) and self.expression == other.expression
+    
 class Cos(Expression):
     
     #param: expression = an Expression
@@ -239,6 +279,9 @@ class Cos(Expression):
     def __str__(self):
         return "(cos " + self.expression.__str__() + ")"
     
+    def __eq__(self, other):
+        return isinstance(other,Cos) and self.expression == other.expression    
+    
 class Tan(Expression):
     
     #param: expression = an Expression
@@ -254,6 +297,9 @@ class Tan(Expression):
     
     def __str__(self):
         return "(tan " + self.expression.__str__() + ")" 
+    
+    def __eq__(self, other):
+        return isinstance(other,Tan) and self.expression == other.expression    
 
 class Cot(Expression):
     
@@ -271,6 +317,9 @@ class Cot(Expression):
     def __str__(self):
         return "(cot " + self.expression.__str__() + ")"
     
+    def __eq__(self, other):
+        return isinstance(other,Cot) and self.expression == other.expression    
+    
 class Sec(Expression):
     
     #param: expression = an Expression
@@ -287,6 +336,9 @@ class Sec(Expression):
     def __str__(self):
         return "(sec " + self.expression.__str__() + ")"
     
+    def __eq__(self, other):
+        return isinstance(other,Sec) and self.expression == other.expression    
+    
 class Csc(Expression):
     
     #param: expression = an Expression
@@ -302,6 +354,9 @@ class Csc(Expression):
     
     def __str__(self):
         return "(csc " + self.expression.__str__() + ")"
+    
+    def __eq__(self, other):
+        return isinstance(other,Csc) and self.expression == other.expression    
     
     
 """e = Multiply(Variable("x"), Plus(Constant(5.3),Variable("x")))
