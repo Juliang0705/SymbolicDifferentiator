@@ -103,11 +103,15 @@ class Parser:
         if not (isinstance(v,str) or len(v) == 1):
             raise ParserError
         pattern = '\d' + v +'|' + v +'\(' + '|\)\(|' + '\d\(' +'|\)' + v
-        functions = "|\de^" + "|\dln" + "|\dsin" + "|\dcos" + "|\dtan" + "|\dsec" + "|\dcot" + "|\dcsc"   
-        pattern += functions
-        while re.search(pattern,source):
-            index = re.search(pattern,source).start() + 1
-            source = source[:index] + '*' + source[index:]
+        pattern += ("|\de^" + "|\dln" + "|\dsin" + "|\dcos" + "|\dtan" + "|\dsec" + "|\dcot" + "|\dcsc")   
+        pattern += ("|de^" + "|dln" + "|dsin" + "|dcos" + "|dtan" + "|dsec" + "|dcot" + "|dcsc").replace('d',v)
+        while (True):
+            result = re.search(pattern,source)
+            if result:
+                index = re.search(pattern,source).start() + 1
+                source = source[:index] + '*' + source[index:]  
+            else:
+                break
         self.ts = TokenStream(source, v)
     
     def parse(self):
@@ -208,11 +212,17 @@ class Parser:
                 raise ParsingError
         else:
             raise ParsingError
-    
-try:    
-    p = Parser("(3+2)(3ln(x))(3+2)", "x")
-    print p.parse()
-except ParsingError:
-    print "ParsingError"
+
+def main():
+    try:
+        while (True):
+            input = raw_input("f(x)=")
+            p = Parser(input,'x')
+            print "f'(x)=" , p.parse().derivative()
+    except (ParsingError,ParserError):
+        print "Parsing Error"
+
+if __name__ == "__main__":
+    main()
 
     
