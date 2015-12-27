@@ -3,9 +3,7 @@ from Expression import *
 class TokenStream:
     
     def __init__(self,source,v):
-        self.stream = re.sub(re.compile(r'\s+'), '',source)
-        assert isinstance(v,str)
-        assert len(v) == 1        
+        self.stream = re.sub(re.compile(r'\s+'), '',source)     
         self.variable = v
         
     def __str__(self):
@@ -83,7 +81,7 @@ class TokenStream:
     def getVariable(self):
         return self.getWord(self.variable)
     
-    def hasStream():
+    def hasStream(self):
         return len(self.stream) != 0
 """
 order of precedence:
@@ -97,12 +95,29 @@ order of precedence:
 """
 class ParsingError(Exception):
     pass
+class ParserError(Exception):
+    pass
 class Parser:
     
     def __init__(self,source,v):
+        if not (isinstance(v,str) or len(v) == 1):
+            raise ParserError
+        pattern = '\d' + v +'|' + v +'\(' + '|\)\(|' + '\d\(' +'|\)' + v
+        functions = "|\de^" + "|\dln" + "|\dsin" + "|\dcos" + "|\dtan" + "|\dsec" + "|\dcot" + "|\dcsc"   
+        pattern += functions
+        while re.search(pattern,source):
+            index = re.search(pattern,source).start() + 1
+            source = source[:index] + '*' + source[index:]
         self.ts = TokenStream(source, v)
     
     def parse(self):
+        result = self.startParse()
+        if self.ts.hasStream():
+            raise ParsingError
+        else:
+            return result
+        
+    def startParse(self):
         return self.parsePlusMinus()
         
     def parsePlusMinus(self):
@@ -140,7 +155,6 @@ class Parser:
             return self.parsePowerSeq(Power(left,right))
         else:
             return left
-        
     def parseFunctions(self):
         f = self.ts.getFunction()
         if f == "e^":
@@ -186,7 +200,7 @@ class Parser:
     def parseParenthesis(self):
         leftParen = self.ts.getLeftParen()
         if leftParen:
-            v = self.parse()
+            v = self.startParse()
             rightParen = self.ts.getRightParen()                
             if rightParen:
                 return v
@@ -196,7 +210,7 @@ class Parser:
             raise ParsingError
     
 try:    
-    p = Parser("1+(3-4)x", "x")
+    p = Parser("(3+2)(3ln(x))(3+2)", "x")
     print p.parse()
 except ParsingError:
     print "ParsingError"
