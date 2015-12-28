@@ -101,7 +101,9 @@ class Plus(Expression):
         self.right = right
         
     def derivative(self):
-        return Plus(self.left.derivative(), self.right.derivative())
+        left = self.left.derivative()
+        right = self.right.derivative()
+        return Plus(left, right)
     
     def compute(self, x):
         return self.left.compute(x) + self.right.compute(x)
@@ -122,7 +124,9 @@ class Minus(Expression):
         self.right = right
         
     def derivative(self):
-        return Minus(self.left.derivative(), self.right.derivative())
+        left = self.left.derivative()
+        right = self.right.derivative()
+        return Minus(left, right)
     
     def compute(self, x):
         return self.left.compute(x) - self.right.compute(x)
@@ -358,13 +362,3 @@ class Csc(Expression):
     def __eq__(self, other):
         return isinstance(other,Csc) and self.expression == other.expression    
     
-    
-"""e = Multiply(Variable("x"), Plus(Constant(5.3),Variable("x")))
-
-e = Divide(Plus(Multiply(Constant(3), Variable("z")), Constant(9)), Minus(Constant(2), Variable(
-                                                                                               "z")))
-                                                                                               """
-e = Csc(Variable("x"))
-print e
-print e.derivative()
-print e.derivative().compute(math.pi/2)
