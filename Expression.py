@@ -102,6 +102,8 @@ def simplify(expr):
         right = simplify(expr.right)        
         if left == Constant(0):
             return Constant(0)
+        elif left == right:
+            return Constant(1)
         else:
             return Divide(left, right)
         
@@ -295,7 +297,10 @@ class E(Expression):
         self.exponent = exponent
     
     def derivative(self):
-        return simplify(Multiply(self.exponent.derivative(),self))
+        if isinstance(self.exponent,Ln):
+            return simplify(self.exponent.argument.derivative())
+        else:
+            return simplify(Multiply(self.exponent.derivative(),self))
     
     def compute(self, x):
         return math.pow(math.e,self.exponent.compute(x))
@@ -314,7 +319,10 @@ class Ln(Expression):
         self.argument = argument
     
     def derivative(self):
-        return simplify(Multiply(self.argument.derivative(),Power(self.argument, Constant(-1))))
+        if isinstance(self.argument,E):
+            return simplify(self.argument.exponent.derivative())
+        else:
+            return simplify(Multiply(self.argument.derivative(),Power(self.argument, Constant(-1))))
     
     def compute(self, x):
         return math.log(self.argument.compute(x))
