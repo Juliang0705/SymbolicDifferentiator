@@ -4,6 +4,9 @@ import matplotlib
 from matplotlib.figure import Figure
 from numpy import arange
 from ExpressionParser import *
+import tkMessageBox
+import webbrowser
+
 class Grapher:
     
     def __init__(self, master):
@@ -30,12 +33,20 @@ class Grapher:
         
         self.computeButton = Button(self.bottomFrame,text="Compute",command=self.compute)
         self.computeButton.place(relx=0.5,rely=0.6,anchor=CENTER)       
-
+        
+        self.infoButton = Button(self.bottomFrame,text="info",command=self.info)
+        self.infoButton.place(relx=0.5,rely=0.75,anchor=CENTER)       
+        
         self.plotBoard = Figure(figsize=(5, 3), dpi=100)
 
         self.canvas = FigureCanvasTkAgg(self.plotBoard, master=self.topFrame)
         self.canvas.show()
         self.canvas.get_tk_widget().pack(side=TOP)
+        
+    def info(self):
+        answer = tkMessageBox.askyesno("Info","Designed and created by Juliang Li\n Go check out his Github?\nhttps://github.com/Juliang0705")
+        if answer:
+            webbrowser.open("https://github.com/Juliang0705",2)
         
     def compute(self):
         input = self.input.get()
@@ -49,12 +60,12 @@ class Grapher:
             validXPs,validYPs = self.safeCompute(xs,fprime.compute)
             self.plotBoard.clear()
             subplot = self.plotBoard.add_subplot(111)
-            subplot.plot(validXs,validYs,label=str(f))
-            subplot.plot(validXPs,validYPs,label=str(fprime))
+            subplot.plot(validXs,validYs,label="f(x)")
+            subplot.plot(validXPs,validYPs,label="f '(x)")
             subplot.legend(loc='upper center', shadow=True, fontsize='x-small')
             self.canvas.show()
         except (ParsingError,ParserError):
-            print "Parsing Error"  
+            tkMessageBox.showerror("Parsing Error","Remaining string: " + str(p) + "\nMake sure to use ( ) around functions\n e.g. [no]sin x [ok]sin(x)")            
             
     def safeCompute(self,xs,f):
         validXs = []
@@ -63,17 +74,26 @@ class Grapher:
             try:
                 validYs.append(f(x))
                 validXs.append(x)
-            except ValueError:
+            except (ValueError,ZeroDivisionError):
                 pass
         return (validXs,validYs)
             
-            
+def center(win):
+    win.update_idletasks()
+    width = win.winfo_width()
+    height = win.winfo_height()
+    x = (win.winfo_screenwidth() // 2) - (width // 2)
+    y = (win.winfo_screenheight() // 2) - (height // 2)
+    win.geometry('{}x{}+{}+{}'.format(width, height, x, y))    
+    
 def main():
     root = Tk()
-    root.geometry("400x500+300+300")
+    root.geometry("400x500+500+200")
     root.wm_title("Derivative Grapher")
     root.resizable(0,0)
     grapher = Grapher(root)
+    center(root)
+    root.lift()
     root.mainloop()
 
 if __name__ == "__main__":
