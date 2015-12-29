@@ -114,6 +114,8 @@ class Parser:
                 break
         self.ts = TokenStream(source, v)
     
+    def __str__(self):
+        return str(self.ts)
     def parse(self):
         result = self.startParse()
         if self.ts.hasStream():
@@ -218,7 +220,8 @@ def main():
         while (True):
             input = raw_input("f(x)=")
             p = Parser(input,'x')
-            print "f'(x)=" , p.parse().derivative()
+            result = p.parse().derivative()
+            print "f'(x)=" , result
     except (ParsingError,ParserError):
         print "Parsing Error"
 
