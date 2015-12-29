@@ -49,7 +49,108 @@ class Expression (object):
     
     def __ne__(self,other):
         return not self.__eq__(other)
+
+def simplify(expr):
+    assert isinstance(expr,Expression)
     
+    if isinstance(expr,Constant):
+        return expr
+    elif isinstance(expr,Variable):
+        return expr
+    elif isinstance(expr,Plus):
+        
+        left = simplify(expr.left)
+        right = simplify(expr.right)
+        if left == Constant(0) and right == Constant(0):
+            return Constant(0)
+        elif left == Constant(0):
+            return right
+        elif right == Constant(0):
+            return left
+        else:
+            return Plus(left, right)
+    
+    elif isinstance(expr,Minus):
+        
+        left = simplify(expr.left)
+        right = simplify(expr.right)
+        if left == Constant(0) and right ==Constant(0):
+            return Constant(0)
+        elif right == Constant(0):
+            return left
+        elif left == Constant(0):
+            return Multiply(Constant(-1), right)
+        else:
+            return Minus(left,right)
+        
+    elif isinstance(expr,Multiply):
+        
+        left = simplify(expr.left)
+        right = simplify(expr.right)
+        if left == Constant(0) or right == Constant(0):
+            return Constant(0)
+        elif left == Constant(1):
+            return right
+        elif right == Constant(1):
+            return left
+        else:
+            return Multiply(left, right)
+        
+    elif isinstance(expr,Divide):
+        
+        left = simplify(expr.left)
+        right = simplify(expr.right)        
+        if left == Constant(0):
+            return Constant(0)
+        else:
+            return Divide(left, right)
+        
+    elif isinstance(expr,Power):
+        
+        base = simplify(expr.base)
+        exponent = simplify(expr.exponent)
+        if base == Constant(0):
+            return Constant(0)
+        elif base == Constant(1):
+            return Constant(1)
+        elif exponent == Constant(0):
+            return Constant(1)
+        elif exponent == Constant(1):
+            return base
+        else:
+            return Power(base, exponent)
+        
+    elif isinstance(expr,E):
+        exponent = simplify(expr.exponent)
+        if exponent == Constant(0):
+            return Constant(1)
+        elif isinstance(exponent,Ln):
+            return exponent.argument
+        else:
+            return E(exponent)
+    elif isinstance(expr,Ln):
+        argument = simplify(expr.argument)
+        if argument == Constant(1):
+            return Constant(0)
+        elif isinstance(argument,E):
+            return argument.exponent
+        else:
+            return Ln(argument)
+    else:
+        #Trig functions
+        expression = simplify(expr.expression)
+        if isinstance(expr,Sin):
+            return Sin(expression)
+        elif isinstance(expr,Cos):
+            return Cos(expression)
+        elif isinstance(expr,Tan):
+            return Tan(expression)
+        elif isinstance(expr,Cot):
+            return Cot(expression)
+        elif isinstance(expr,Sec):
+            return Sec(expression)
+        elif isinstance(expr,Csc):
+            return Csc(expression)
         
 class Constant(Expression):
     
@@ -103,7 +204,7 @@ class Plus(Expression):
     def derivative(self):
         left = self.left.derivative()
         right = self.right.derivative()
-        return Plus(left, right)
+        return simplify(Plus(left, right))
     
     def compute(self, x):
         return self.left.compute(x) + self.right.compute(x)
@@ -126,7 +227,7 @@ class Minus(Expression):
     def derivative(self):
         left = self.left.derivative()
         right = self.right.derivative()
-        return Minus(left, right)
+        return simplify(Minus(left, right))
     
     def compute(self, x):
         return self.left.compute(x) - self.right.compute(x)
@@ -149,7 +250,7 @@ class Multiply(Expression):
     def derivative(self):
         left = Multiply(self.left.derivative() , self.right)
         right =  Multiply(self.left , self.right.derivative())
-        return Plus(left,right)
+        return simplify(Plus(left,right))
     
     def compute(self, x):
         return self.left.compute(x) * self.right.compute(x)
@@ -170,11 +271,12 @@ class Divide(Expression):
         self.right = right
         
     def derivative(self):
+        #general case
         left = Multiply(self.left.derivative() , self.right)
         right =  Multiply(self.left , self.right.derivative())
         up = Minus(left,right)
         down = Multiply(self.right, self.right)
-        return Divide(up,down)
+        return simplify(Divide(up,down))
     
     def compute(self, x):
         return self.left.compute(x) / float(self.right.compute(x))
@@ -193,7 +295,7 @@ class E(Expression):
         self.exponent = exponent
     
     def derivative(self):
-        return Multiply(self.exponent.derivative(),self)
+        return simplify(Multiply(self.exponent.derivative(),self))
     
     def compute(self, x):
         return math.pow(math.e,self.exponent.compute(x))
@@ -212,7 +314,7 @@ class Ln(Expression):
         self.argument = argument
     
     def derivative(self):
-        return Multiply(self.argument.derivative(),Power(self.argument, Constant(-1)))
+        return simplify(Multiply(self.argument.derivative(),Power(self.argument, Constant(-1))))
     
     def compute(self, x):
         return math.log(self.argument.compute(x))
@@ -235,9 +337,9 @@ class Power(Expression):
     def derivative(self):
         #Power rule
         if isinstance(self.base,Variable) and isinstance(self.exponent,Constant):
-            return Multiply(self.exponent, Power(self.base, Constant(self.exponent.value-1)))
+            return simplify(Multiply(self.exponent, Power(self.base, Constant(self.exponent.value-1))))
         #this method covers everything else
-        return E(Multiply(self.exponent, Ln(self.base))).derivative()
+        return simplify(E(Multiply(self.exponent, Ln(self.base))).derivative())
     
     def compute(self, x):
         return math.pow(self.base.compute(x), self.exponent.compute(x))
@@ -256,7 +358,7 @@ class Sin(Expression):
         self.expression = expression
     
     def derivative(self):
-        return Multiply(self.expression.derivative(), Cos(self.expression))
+        return simplify(Multiply(self.expression.derivative(), Cos(self.expression)))
     
     def compute(self, x):
         return math.sin(self.expression.compute(x))
@@ -275,7 +377,7 @@ class Cos(Expression):
         self.expression = expression
     
     def derivative(self):
-        return Multiply(self.expression.derivative(), Multiply(Constant(-1),Sin(self.expression)))
+        return simplify(Multiply(self.expression.derivative(), Multiply(Constant(-1),Sin(self.expression))))
     
     def compute(self, x):
         return math.cos(self.expression.compute(x))
@@ -294,7 +396,7 @@ class Tan(Expression):
         self.expression = expression
     
     def derivative(self):
-        return Multiply(self.expression.derivative(), Power(Sec(self.expression),Constant(2)))
+        return simplify(Multiply(self.expression.derivative(), Power(Sec(self.expression),Constant(2))))
     
     def compute(self, x):
         return math.tan(self.expression.compute(x))
@@ -313,7 +415,7 @@ class Cot(Expression):
         self.expression = expression
     
     def derivative(self):
-        return Multiply(self.expression.derivative(), Multiply(Constant(-1),Power(Csc(self.expression),Constant(2))))
+        return simplify(Multiply(self.expression.derivative(), Multiply(Constant(-1),Power(Csc(self.expression),Constant(2)))))
     
     def compute(self, x):
         return 1 / math.tan(self.expression.compute(x))
@@ -332,7 +434,7 @@ class Sec(Expression):
         self.expression = expression
     
     def derivative(self):
-        return Multiply(self.expression.derivative(), Multiply(self,Tan(self.expression)))
+        return simplify(Multiply(self.expression.derivative(), Multiply(self,Tan(self.expression))))
     
     def compute(self, x):
         return 1 / math.cos(self.expression.compute(x))
@@ -351,7 +453,7 @@ class Csc(Expression):
         self.expression = expression
     
     def derivative(self):
-        return Multiply(self.expression.derivative(), Multiply(Constant(-1),Multiply(self,Cot(self.expression))))
+        return simplify(Multiply(self.expression.derivative(), Multiply(Constant(-1),Multiply(self,Cot(self.expression)))))
     
     def compute(self, x):
         return 1 / math.sin(self.expression.compute(x))
