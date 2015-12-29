@@ -135,7 +135,7 @@ class Parser:
             return self.parsePlusMinusSeq(Plus(left,right))
         elif self.ts.getWord("-"):
             right = self.parseMultiplyDivide()
-            return Minus(left,right)
+            return self.parsePlusMinusSeq(Minus(left,right))
         else:
             return left
         
@@ -148,7 +148,7 @@ class Parser:
             return self.parseMultiplyDivideSeq(Multiply(left,right))
         elif self.ts.getWord("/"):
             right = self.parsePower()
-            return Divide(left,right)
+            return self.parseMultiplyDivideSeq(Divide(left,right))
         else:
             return left
         
