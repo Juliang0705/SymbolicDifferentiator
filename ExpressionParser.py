@@ -20,7 +20,7 @@ class TokenStream:
         if len(word) > len(self.stream):
             return False
         result = []
-        for i in xrange(0,len(word)):
+        for i in range(0,len(word)):
             result.append(self.__getChar(i))
         if all(result):
             result = "".join(result)
@@ -38,7 +38,7 @@ class TokenStream:
     def getNumber(self):
         temp = ""
         result = ""
-        for i in xrange(0,len(self.stream)):
+        for i in range(0,len(self.stream)):
             c = self.stream[i]
             if i == 0 and c == '-':
                 temp += c
@@ -218,12 +218,12 @@ class Parser:
 def main():
     try:
         while (True):
-            input = raw_input("f(x)=")
-            p = Parser(input,'x')
+            userInput = input("f(x)=")
+            p = Parser(userInput,'x')
             result = p.parse().derivative()
-            print "f'(x)=" , result
+            print("f'(x)=", result)
     except (ParsingError,ParserError):
-        print "Parsing Error"
+        print("Parsing Error")
 
 if __name__ == "__main__":
     main()
